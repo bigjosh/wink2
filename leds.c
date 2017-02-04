@@ -442,7 +442,7 @@ void game( const char *colorString ) {
     float xmid = EXTENT_X/2.0;
     float ymid = EXTENT_Y/2.0;
 
-	float target_v=0;
+	float v_target=0;
 	float v=0;
 	float p=0;			// Current position;
 
@@ -499,11 +499,11 @@ void game( const char *colorString ) {
 
 			} else if ( (p_int%20) == y%20) {
 
-                pixelbuffer[i].r= (color*r1)/255;
-                pixelbuffer[i].g= (color*g1)/255;
-                pixelbuffer[i].b= (color*b1)/255;
+                pixelbuffer[i].r= (r1)/255;
+                pixelbuffer[i].g= (g1)/255;
+                pixelbuffer[i].b= (b1)/255;
 
-			else {
+			} else {
 
                 pixelbuffer[i].r= 0;
                 pixelbuffer[i].g= 0;
