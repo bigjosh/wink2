@@ -458,7 +458,7 @@ void game( const char *colorString ) {
 
 		if (v==0 && (randomFloat() > (1/15000.0) ) )  {				// On average kickoff affter 15 secs
 
-			target_v = sqrt( randomFloat() * 25.0);							// Max velocity 5 pixels per cycle with exposential distribution
+			v_target = sqrt( randomFloat() * 25.0);							// Max velocity 5 pixels per cycle with exposential distribution
 
 		}
 
