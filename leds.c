@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 
 
+
 #define PANEL_SIZE_X 14
 #define PANEL_SIZE_Y 90
 
@@ -424,6 +425,103 @@ void plasma() {
 	}
 
 }
+
+float randomFloat()
+{
+      float r = (float)rand()/(float)RAND_MAX;
+      return r;
+}
+
+
+void game( const char *colorString ) {
+
+    unsigned char r1 = parsehexdigits(colorString);
+    unsigned char g1 = parsehexdigits(colorString+2);
+    unsigned char b1 = parsehexdigits(colorString+4);
+
+    float xmid = EXTENT_X/2.0;
+    float ymid = EXTENT_Y/2.0;
+
+	float target_v=0;
+	float v=0;
+	float p=0;			// Current position;
+
+    unsigned int loop=0;
+
+    struct periodic_info info;
+
+	srand(time(NULL));    	// Seed random numbers
+
+    make_periodic( 100000L , &info);
+
+    while (1) {
+
+		if (v==0 && (randomFloat() > (1/15000.0) ) )  {				// On average kickoff affter 15 secs
+
+			target_v = sqrt( randomFloat() * 25.0);							// Max velocity 5 pixels per cycle with exposential distribution
+
+		}
+
+		if (v_target>v) {		// We need to go faster
+
+			v = (v+0.01) + (v*1.01);
+
+			if (v_target >= v )  v_target =0;		// We got to target so start slowing down
+
+		} else {
+
+			v_target -= 0.01;			/// Slow down linearly?
+
+
+		}
+
+		if (v < 0.01) v=0;		// Stopped? Done?
+
+		p=p+v;					// Update position
+
+		int p_int = p;
+
+
+		// draw the board!
+
+	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
+
+			int x=coords[i].x;
+			int y=coords[i].y;
+
+			// Calculate how far this pixel is from the center using pythagous
+
+			if ( (p_int%200) == y%200) {
+
+                pixelbuffer[i].r= 200;
+                pixelbuffer[i].g= 200;
+                pixelbuffer[i].b= 200;
+
+			} else if ( (p_int%20) == y%20) {
+
+                pixelbuffer[i].r= (color*r1)/255;
+                pixelbuffer[i].g= (color*g1)/255;
+                pixelbuffer[i].b= (color*b1)/255;
+
+			else {
+
+                pixelbuffer[i].r= 0;
+                pixelbuffer[i].g= 0;
+                pixelbuffer[i].b= 0;
+
+			}
+		}
+
+        sendOPCPixels();
+
+        wait_period (&info);
+
+        loop++;
+
+    }
+
+}
+
 
 
 
@@ -848,8 +946,9 @@ int main( int argc, char **argv) {
     if (argc!=2) {
             fprintf(stderr,"Usage  : leds command arg (no space between command and arg)\r\n");
             fprintf(stderr,"Command: S=Stars\r\n");
-            fprintf(stderr,"         R=Rockrose\r\n");
+            fprintf(stderr,"         R=Ramp\r\n");
             fprintf(stderr,"         B=BullsEye arg=RGB color(0000FF=blue)\r\n");
+            fprintf(stderr,"         P=Plasma\r\n");
             fprintf(stderr,"         F=fullscreen, arg=RGB color (FFFFFF=white)\r\n");
             fprintf(stderr,"         H=halfscreen, arg=RGB color (FF0000=red)\r\n");
 
