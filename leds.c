@@ -12,7 +12,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netdb.h>
 #include <arpa/inet.h>
 
 
@@ -53,22 +53,26 @@ struct coord {
 
 struct coord coords[ BUFFER_SIZE ];
 
-// coords[0].x is the x location of the point that is in opcbuffer[0] 
+// coords[0].x is the x location of the point that is in opcbuffer[0]
 
 // 0,0 is upper left pixel as viewed from front
 // Left panel is channel #1, middle #2, right #3.
 // All are wired CCW as viewed from the front
 // 1st pixel of each panel is just to the left of center
 
+int panelOrder[PANEL_COUNT] = { 1 , 2, 0 };		// Mapp the physical order of the panels to the order they are connected to pins (and thus ledscape channels)
+
 void initcoords() {
-	
+
 	int i=0;			// i index into buffer
-	
+
 	for(int p=0;p<PANEL_COUNT;p++) {
-		
-		int panel_offset_x = p * (PANEL_SPACING_X);		// step to the right
-		int panel_offset_y = p * (PANEL_SPACING_Y);
-		
+
+		int panelPhysical = panelOrder[p];
+
+		int panel_offset_x = panelPhysical * (PANEL_SPACING_X);		// step to the right
+		int panel_offset_y = panelPhysical * (PANEL_SPACING_Y);
+
 		for(int x=6;x>0;x--) {			// go to top left corner
 			coords[i].x=x+panel_offset_x;
 			coords[i].y=0+panel_offset_y;
@@ -92,15 +96,15 @@ void initcoords() {
 			coords[i].y=y+panel_offset_y;
 			i++;
 		}
-		
+
 		for(int x=(PANEL_SIZE_X-1);x>6;x--) {			// home strech on top to middle
 			coords[i].x=x+panel_offset_x;
 			coords[i].y=0+panel_offset_y;
 			i++;
 		}
-		
+
 	}
-		
+
 }
 
 
@@ -118,29 +122,29 @@ void printpixels() {
 #define OPC_HEADERSIZE 4 		// 4 bytes in opc header
 #define OPC_BUFFERSIZE (OPC_HEADERSIZE + OPC_BYTECOUNT)
 
-unsigned char opcbuffer[ OPC_BUFFERSIZE ];   //Convert the buffer to a single char for each R,G, & B 
+unsigned char opcbuffer[ OPC_BUFFERSIZE ];   //Convert the buffer to a single char for each R,G, & B
 
 void initopcheader() {
-		
-	opcbuffer[0]=0x00;		// Channel=0 
-	opcbuffer[1]=0x00;		// Command=0	
+
+	opcbuffer[0]=0x00;		// Channel=0
+	opcbuffer[1]=0x00;		// Command=0
 	opcbuffer[2]=(OPC_BYTECOUNT>>8);		// len MSB
 	opcbuffer[3]=(OPC_BYTECOUNT&0xff);	// len LSB
-	
+
 }
 
 
 void printopcbuffer() {
-	
+
     fprintf( stderr, "BUFFERSIZE=%d\r\n" , BUFFER_SIZE );
     fprintf( stderr, "OPC_BUFFERSIZE=%d\r\n" , OPC_BUFFERSIZE );
-    
+
     unsigned char *opcptr=opcbuffer;		// Skip past the header
-	    
-    
+
+
     //fprintf(stderr , HEADER: %2.2x%2.2x%2.2x%2.2x\r\n" , *opcbuffer++, *opcbuffer++, *opcbuffer++, *opcbuffer++ );
-    
-    
+
+
     for(int i=0;i<OPC_BUFFERSIZE;i++) {
 	  //  fprintf( stderr , "%5.5d. %2.2x\r\n" , i , *(opcptr++) );
     }
@@ -149,26 +153,26 @@ void printopcbuffer() {
 int sockfd;
 
 void sendOPCPixels() {
-	
+
 	initopcheader();			// Todo: only do this one per run
-	
+
 	unsigned int opcptr=OPC_HEADERSIZE;		// Skip past the header
-	
+
 	// TODO: skip this and keep the RGBs directly in the buffer?
-	
+
 	for(int i=0; i<BUFFER_SIZE;i++) {
 
-		opcbuffer[opcptr++]=pixelbuffer[i].r;		
+		opcbuffer[opcptr++]=pixelbuffer[i].r;
 		opcbuffer[opcptr++]=pixelbuffer[i].g;
 		opcbuffer[opcptr++]=pixelbuffer[i].b;
 	}
-	
+
 	//printf("bytes=%d\r\n", pb-opcbuffer);
-	
+
 	//printopcbuffer();
-		  
+
      int x=write( sockfd , opcbuffer ,  OPC_BUFFERSIZE );		// 3 bytes (r,g,b) per pixel
-	
+
 /*
 	if (x!=1840) {
 		fprintf( stderr , "out=%d\r\n" ,x );
@@ -179,17 +183,17 @@ void sendOPCPixels() {
 	}
 
 */
-	
+
 	if (opcbuffer[0] != 0 || opcbuffer[1] != 0 ) {
 		fprintf( stderr , "YIKES!!!\r\n" ,x );
-	
+
 	}
-		
+
 	//printpixels();
 	//getchar();
-      
+
 }
-    
+
 /**** Periodic timer stuff from http://www.2net.co.uk/tutorial/periodic_threads */
 
 
@@ -241,7 +245,7 @@ static void wait_period (struct periodic_info *info)
 
     /* "missed" should always be >= 1, but just to be sure, check it is not 0 anyway */
     /* Note that the copied code was WRONG! */
-    
+
     if (missed > 1) {
         info->wakeups_missed += (missed - 1);
 	   fprintf(stderr,"missed=%5.5d\r\n",missed);		// TODO: Get rid of this
@@ -249,41 +253,41 @@ static void wait_period (struct periodic_info *info)
 }
 
 static void end_periodic(struct periodic_info *info) {
-    
+
     close( info->timer_fd);
 }
 
 /**** End periodic timer stuff */
 
 /*
-    
+
 void sinewaves(){
-    
+
     for( int loop = 0; loop<1000;loop++) {
-        
-    
+
+
         for( int x=0; x<SIZE_X; x++) {
-        
+
             for(int y=0;y<SIZE_Y;y++) {
-            
+
                 int color = (int) (0.5+ ( ( 100.0 + (100.0 * sin( (( (1.0* loop) / 1000) + ( (1.0 * x) / SIZE_X) ) * 3.1415 * 20 )  ) ) ) );
-            
+
                 SETRGB( x , y , color , color , color );
-            
+
             }
         }
-        
+
         sendOPCPixels();
-//        usleep(100000);        
-        
-    }        
-    
-}    
+//        usleep(100000);
+
+    }
+
+}
 
 */
 
 unsigned char parsehexdigit( const char s) {
-    
+
     if (isdigit(s)) return( s - '0' );
     if (islower(s) && s<='f') return( s - 'a' + 10);
     if (isupper(s) && s<='F') return( s - 'A' + 10);
@@ -292,9 +296,9 @@ unsigned char parsehexdigit( const char s) {
 
 
 unsigned char parsehexdigits( const char *s ) {
-    
+
     return( ( parsehexdigit(*s) << 4 ) + parsehexdigit( *(s+1)) );
-    
+
 }
 
 float square(float x) {
@@ -302,133 +306,133 @@ float square(float x) {
 }
 
 void bullseyes( const char *colorString ) {
-    
+
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
-    unsigned char b1 = parsehexdigits(colorString+4);    
-              
+    unsigned char b1 = parsehexdigits(colorString+4);
+
     float xmid = EXTENT_X/2.0;
     float ymid = EXTENT_Y/2.0;
-    
+
     float radius = sqrt( square(xmid) + square(ymid) );
-    
+
     unsigned int loop=0;
 
     struct periodic_info info;
 
     make_periodic( 100000L , &info);
-    
+
     while (1) {
-	    
+
 	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
-	    
+
 			int x=coords[i].x;
 			int y=coords[i].y;
-		    
+
 			// Calculate how far this pixel is from the center using pythagous
-			
+
                float distance = sqrt( square( xmid-x )  + square( ymid - y) );		// remeber that signs don't matter when you square!
-			
+
 			float normaldisance = distance /radius;    // distance normalized to range 0-1
-                                
+
                int color = (int) (
-               
+
 				(
-			
-					( 
+
+					(
 						(
-							sin( (normaldisance + (loop/200.0)) * 3.1415    ) 
-						
+							sin( (normaldisance + (loop/200.0)) * 3.1415    )
+
 							* 0.5 		// Now it is 0.5 to -0.5
-							
-						) 
-					
+
+						)
+
 						+ 0.5			// Now it is 0-1
-						
-					)	
-					
+
+					)
+
 					*255.0					// Now it is 0-255
 				)
-				
+
 			);
-                
-                
+
+
                 pixelbuffer[i].r= (color*r1)/255;
                 pixelbuffer[i].g= (color*g1)/255;
                 pixelbuffer[i].b= (color*b1)/255;
                 //SETRGB( x , y , color , color , color );
-                
+
         }
-        
+
         sendOPCPixels();
 
         wait_period (&info);
-        
+
         loop++;
-        
-    }        
-    
+
+    }
+
 }
 
 #define pdist(a, v, c, d) sqrt( ((float)a - c) * ( (float) a - c) + ( (float) v - d) * ( (float) v - d))
 
 void plasma() {
-    
-    
+
+
    float xmid = EXTENT_X/2.0;
    float ymid = EXTENT_Y/2.0;
-   
+
 //   float radius = sqrt( (xmid*xmid) + (ymid*ymid));
 
    int loop = 0;
-   
+
     struct periodic_info info;
 
     make_periodic( 40000L , &info);
-   
-   
+
+
    while (1) {
-         
+
 	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
-	    
+
 		int x=coords[i].x;
 		int y=coords[i].y;
-               
-          float time = loop/5.0 ;  
-             
-          float value =                
 
-		  sin( pdist(x + time, y, xmid , ymid ) / 8.0) 
+          float time = loop/5.0 ;
+
+          float value =
+
+		  sin( pdist(x + time, y, xmid , ymid ) / 8.0)
 		  + sin(pdist(x, y, EXTENT_X/4 , EXTENT_Y/4 ) / 8.0)
 		  + sin(pdist(x, y + time / 7, EXTENT_X * 0.75, EXTENT_Y * 0.25) / 7.0)
 		  + sin(pdist(x, y, 40.0, 10.0) / 8.0);
-		
+
 	     int color = (int) ((4 + value) * 32);
-             
+
           pixelbuffer[i].r= color;
           pixelbuffer[i].g= color * 2;
           pixelbuffer[i].b= 255 - color;
-                                       
+
           }
-       
-       
+
+
 		sendOPCPixels();
 		wait_period (&info);
-       
+
 		loop++;
-       
+
 	}
-          
+
 }
 
 
 
 void ramp( const char *colorString ) {
-    
+
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
-    unsigned char b1 = parsehexdigits(colorString+4);    
-              
+    unsigned char b1 = parsehexdigits(colorString+4);
+
     struct periodic_info info;
 
     make_periodic( 10000L, &info);
@@ -437,11 +441,11 @@ void ramp( const char *colorString ) {
     while(1) {
 	    for( int t=0; t<=PANEL_SIZE_Y+1; t++) {
 	    //while (1) {
-		    
+
 		    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
-		    
+
 				int y=coords[i].y;
-				
+
 				if (y>=t) {
 					 pixelbuffer[i].r= r1;
 					 pixelbuffer[i].g= g1;
@@ -449,21 +453,21 @@ void ramp( const char *colorString ) {
 				} else {
 					 pixelbuffer[i].r= 0;
 					 pixelbuffer[i].g= 0;
-					 pixelbuffer[i].b= 0;				
+					 pixelbuffer[i].b= 0;
 				}
-				
-				 
+
+
 		   }
-		   
+
 		  // fprintf(stderr,"t=%d\r\n",t);
-		   
+
 			sendOPCPixels();
 			//fprintf(stderr,"top=%d\r\n",top);
-		   
+
 		   //sleep(1);
-		   wait_period (&info);       
-		   
-	    }        
+		   wait_period (&info);
+
+	    }
 	}
 
 }
@@ -471,31 +475,31 @@ void ramp( const char *colorString ) {
 #define DROP_STEPS 10 		// Number of interpolated steps between pixels
 
 void drops( const char *colorString ) {
-    
+
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
-    unsigned char b1 = parsehexdigits(colorString+4);    
-              
+    unsigned char b1 = parsehexdigits(colorString+4);
+
     struct periodic_info info;
 
     make_periodic( 100000L, &info);
 
     //make_periodic( 1000000L , &info);
     while(1) {
-	    
+
 	    for( int t=0; t<=PANEL_SIZE_Y+2; t++) {
-		    
+
 		    for( int s=0; s< DROP_STEPS ; s++ ) {
-			    
+
 			    int bottombrightness = (255 * s ) / DROP_STEPS;   // int version of (255 * (s/DROP_STEPS));
 			    int topbrightness = 255 - bottombrightness;
-			    
+
 			    //printf( "t=%5.5d s=%5.5d b1=%5.5d b2=%5.5d\r\n" , t , s, topbrightness, bottombrightness);
-		    
+
 			    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
-			    
+
 					int y=coords[i].y;
-					
+
 					if (y==(t-1)) {
 						 pixelbuffer[i].r= (topbrightness*r1)/255;
 						 pixelbuffer[i].g= (topbrightness*g1)/255;
@@ -504,22 +508,22 @@ void drops( const char *colorString ) {
 						 pixelbuffer[i].r= (bottombrightness*r1)/255;
 						 pixelbuffer[i].g= (bottombrightness*g1)/255;
 						 pixelbuffer[i].b= (bottombrightness*b1)/255;
-						 
+
 					} else {
 						 pixelbuffer[i].r= 0;
 						 pixelbuffer[i].g= 0;
-						 pixelbuffer[i].b= 0;				
+						 pixelbuffer[i].b= 0;
 					}
-					
+
 			    }
-										 
-			 			  			   
+
+
 				sendOPCPixels();
-				wait_period (&info);       				
-				
+				wait_period (&info);
+
 		    }
-		   
-	    }        
+
+	    }
 	}
 
 }
@@ -527,40 +531,40 @@ void drops( const char *colorString ) {
 
 
 void full( const char *colorString ) {
-    
+
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
-    unsigned char b1 = parsehexdigits(colorString+4);    
-              
-    
+    unsigned char b1 = parsehexdigits(colorString+4);
+
+
     unsigned int loop=0;
 
     struct periodic_info info;
 
     make_periodic(100000UL, &info);
-    
+
 
 	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
-	    
+
 		 pixelbuffer[i].r= r1;
 		 pixelbuffer[i].g= g1;
 		 pixelbuffer[i].b= b1;
-			 
+
         }
 
-    
+
     while (1) {
-	    
-        
+
+
         sendOPCPixels();
 	   //cprintf("sent\r\n");
 
         wait_period (&info);
-        
+
         loop++;
-        
-    }        
-    
+
+    }
+
 }
 
 
@@ -570,41 +574,41 @@ void full( const char *colorString ) {
 #define RANDPRICOLOR() ( (random() & 1 ) ? 0 : 240)
 
 void squares() {
-    
+
 
     for( int loop = 0; loop<1000;loop++) {
-        
+
         int x1 = random() % SIZE_X;
         int y1 = random() % SIZE_Y;
-        
+
         int x2 = random() % SIZE_X;
         int y2 = random() % SIZE_Y;
-        
+
         int red = RANDPRICOLOR();
         int green = RANDPRICOLOR();
         int blue = RANDPRICOLOR();
-        
-        
+
+
         for( int x=x1; x<=x2; x++) {
-            
+
             for(int y=y1;y<=y2;y++) {
-                
+
                 r[x][y]=red;
                 g[x][y]=green;
                 b[x][y]=blue;
                 //SETRGB( x , y , color , color , color );
-                
+
             }
         }
-        
+
         sendOPCPixels();
-        
+
         //usleep(100000);
-        
+
     }
-    
-    
-    
+
+
+
 }
 
 
@@ -616,37 +620,37 @@ void stars(const char *colorString) {
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
     unsigned char b1 = parsehexdigits(colorString+4);
-        
+
     int head=0;
-    
+
     while (1) {
-        
+
         int x=starsx[head];
         int y=starsy[head];
-        
+
         r[x][y]=0;
         g[x][y]=0;
         b[x][y]=0;
-        
-        
+
+
         x = random() % SIZE_X;
         y = random() % SIZE_Y;
-        
+
         SETRGB( x ,y ,  r1, g1 , b1 );
 
 
         starsx[head] =x;
         starsy[head] =y;
-        
-        head++;        
+
+        head++;
         head &=15;
-                
+
         sendOPCPixels();
-        
+
     }
-    
-    
-    
+
+
+
 }
 
 
@@ -692,155 +696,155 @@ unsigned long missed=0;
 #define RR_STEPS 6
 
 void rockrose() {
-    
+
     struct periodic_info pi;
-    
+
     make_periodic( 5000 , &pi );
-    
+
     while(1) {
-    
+
         for( int scroll=0; scroll < (RR_X - SIZE_X) ; scroll++ ) {
-        
+
             for( unsigned char step=0; step < RR_STEPS ; step++ ) {          // Subpixel stepping
 
                 for( int y=0; y< RR_Y; y++ ) {
-                
+
                    unsigned char *rrdatarow = rockrosedata + ( ( (RR_Y-1) - y ) * RR_X) + scroll;
-               
+
                    unsigned char currentPixel = *rrdatarow;
-               
+
                    for( int x=0; x< SIZE_X; x++ ) {
-                
-                        int color; 
-                                                                                                       
-                        rrdatarow++; 
-                        
+
+                        int color;
+
+                        rrdatarow++;
+
                         unsigned char nextPixel = *rrdatarow;
-                
+
                         color = (( currentPixel * (RR_STEPS - step)) / RR_STEPS ) + ( ( nextPixel * step) / RR_STEPS );
-                        
+
                         currentPixel = nextPixel;
-                                                    
+
                         SETRGB( x , y , color , color , color );
-                
+
                     }
                 }
-        
+
                 wait_period(&pi);
-            
+
                 sendOPCPixels();
-        
+
             }
-        }   
-    
+        }
+
         if (pi.wakeups_missed) {
-        
+
             fprintf(stderr,"Missed:%lu\r\n", (unsigned long) pi.wakeups_missed );
-        
+
         }
     }
-            
+
     end_periodic(&pi);
-    
+
 }
 
 
 void speedtest(){
-    
+
     for( int loop = 0; loop<1000;loop++) {
-        
-        
+
+
         for( int x=0; x<SIZE_X; x++) {
-            
+
             for(int y=0;y<SIZE_Y;y++) {
-                
+
                 r[x][y] = 200;
-                                
+
                 sendOPCPixels();
-                
+
             }
         }
-        
-        
-    }        
+
+
+    }
 }
 
 
 void full( const char *colorString ) {
-    
+
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
     unsigned char b1 = parsehexdigits(colorString+4);
-        
+
     for( int x=0; x<SIZE_X; x++) {
-            
+
         for(int y=0;y<SIZE_Y;y++) {
-                
+
             r[x][y] = r1;
             g[x][y] = g1;
             b[x][y] = b1;
-                            
-                
+
+
         }
-    }    
-    
-    sendOPCPixels();    
-    
+    }
+
+    sendOPCPixels();
+
 }
 
 
 
 void half( const char *colorString ) {
-    
+
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
     unsigned char b1 = parsehexdigits(colorString+4);
-    
+
     unsigned int marginx = (SIZE_X /4)+5 ;
-        
+
     for( int x=marginx; x< (SIZE_X-marginx) ; x++) {
-        
+
         for(int y=0;y<SIZE_Y;y++) {
-            
+
             r[x][y] = r1;
             g[x][y] = g1;
             b[x][y] = b1;
-            
-            
+
+
         }
     }
-    
+
     sendOPCPixels();
-    
+
 }
 
 */
 
 
 int opensocket() {
-	
+
 	int n;
-   
+
     struct sockaddr_in servaddr;
- 
+
     sockfd=socket(AF_INET,SOCK_STREAM,0);
     bzero(&servaddr,sizeof servaddr);
- 
+
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(7890);
- 
+
     inet_pton(AF_INET,"127.0.0.1",&(servaddr.sin_addr));
- 
+
     connect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
-    
+
     return(sockfd);
-    
+
 }
 
 
 
 int main( int argc, char **argv) {
-    
+
     if (argc!=2) {
             fprintf(stderr,"Usage  : leds command arg (no space between command and arg)\r\n");
             fprintf(stderr,"Command: S=Stars\r\n");
@@ -848,44 +852,44 @@ int main( int argc, char **argv) {
             fprintf(stderr,"         B=BullsEye arg=RGB color(0000FF=blue)\r\n");
             fprintf(stderr,"         F=fullscreen, arg=RGB color (FFFFFF=white)\r\n");
             fprintf(stderr,"         H=halfscreen, arg=RGB color (FF0000=red)\r\n");
-            
+
             fprintf(stderr,"Example: leds F00000F = Full panel to blue\r\n");
-            
-            return(1);        
+
+            return(1);
     }
-    
+
     opensocket();
-    
+
 	 if (sockfd < 0) {
-		   fprintf( stderr , "ERROR opening socket");    
+		   fprintf( stderr , "ERROR opening socket");
 	 }
-	   
+
     initcoords();
-    
+
     /*
     printf("BUFFER_SIZE=%d , PANEL_SIZE=%d\r\n" , BUFFER_SIZE , PANEL_SIZE);
     for(int i=0;i<BUFFER_SIZE;i++) {
 	    printf("%5.5d. %5.5d,%5.5d\r\n" , i , coords[i].x , coords[i].y );
     }
     */
-    
+
     switch (argv[1][0]) {
-        
+
 //        case 'S': stars(argv[1]+1);           break;
         case 'R': ramp(argv[1]+1);        break;
         case 'B': bullseyes(argv[1]+1);     break;
         case 'D': drops(argv[1]+1);     break;
-	   
+
         case 'P': plasma();                 break;
         case 'F': full( argv[1]+1 );          break;
 //        case 'H': half( argv[1]+1 );          break;
-        
-        default: 
-            fprintf(stderr,"Try running with no args for help.\r\n");        
+
+        default:
+            fprintf(stderr,"Try running with no args for help.\r\n");
             return(1);
-            
+
     }
-    
+
     return(0);
-    
+
 }
