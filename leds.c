@@ -948,6 +948,8 @@ int main( int argc, char **argv) {
             fprintf(stderr,"Command: S=Stars\r\n");
             fprintf(stderr,"         R=Ramp\r\n");
             fprintf(stderr,"         B=BullsEye arg=RGB color(0000FF=blue)\r\n");
+            fprintf(stderr,"         G=Game arg=RGB color(0000FF=blue)\r\n");
+
             fprintf(stderr,"         P=Plasma\r\n");
             fprintf(stderr,"         F=fullscreen, arg=RGB color (FFFFFF=white)\r\n");
             fprintf(stderr,"         H=halfscreen, arg=RGB color (FF0000=red)\r\n");
@@ -977,6 +979,8 @@ int main( int argc, char **argv) {
 //        case 'S': stars(argv[1]+1);           break;
         case 'R': ramp(argv[1]+1);        break;
         case 'B': bullseyes(argv[1]+1);     break;
+        case 'G': game(argv[1]+1);     break;
+
         case 'D': drops(argv[1]+1);     break;
 
         case 'P': plasma();                 break;
