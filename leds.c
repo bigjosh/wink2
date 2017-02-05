@@ -432,6 +432,15 @@ float randomFloat()
       return r;
 }
 
+// distance between two points
+
+int pointdistance( float x1, float y1, float x2, float y2) {
+
+    return(  sqrt( square(x1-x2)  + square( y1-y2) )  );
+
+}
+
+#define PI (3.1415)
 
 void game( const char *colorString ) {
 
@@ -441,8 +450,7 @@ void game( const char *colorString ) {
 
     printf("b1=%x\r\n",b1);
 
-    float xmid = EXTENT_X/2.0;
-    float ymid = EXTENT_Y/2.0;
+    // Field stuff
 
 	float v_target=0;
 	float v=0;
@@ -450,7 +458,21 @@ void game( const char *colorString ) {
 
     int direction = 1;
 
-    float teamsize = 10;
+    // team stuff
+
+    float xmid = PANEL_SIZE_X/2.0;
+    
+    float blueteam_rate = (2 * PI) / 1000;
+    float redteam_rate = (2 * PI) / 1200;
+
+    float blueteam_x = xmid;
+    float redteam_x = xmid;
+
+    float teamradius = xmid*2;            // For now fille the area;
+
+    float blueteam_y = 0 + teamradius + 2;                // Blue top
+    float redteam_y = EXTENT_Y - 2 - teamradius;          // Red bottom
+
 
     unsigned int loop=0;
 
@@ -575,40 +597,29 @@ void game( const char *colorString ) {
                 pixelbuffer[i].b= 0;
 
 			}
+
+
+            // Draw the teams!
+
+            float blue_current_radius = ((sin( loop * blueteam_rate ) + 1 ) /2) * teamradius;
+            float red_current_radius = ((sin( loop * redteam_rate ) + 1 ) /2) * teamradius;
+
+
+            if ( pointdistance( x , y , redteam_x, redteam_y ) <= red_current_radius ) {
+                    pixelbuffer[i].r= 240;
+                    pixelbuffer[i].g= 0;
+                    pixelbuffer[i].b= 0;
+            }
+
+            if ( pointdistance( x , y , blueteam_x, blueteam_y ) <= blue_current_radius ) {
+                    pixelbuffer[i].r= 0;
+                    pixelbuffer[i].g= 0;
+                    pixelbuffer[i].b= 240;
+            }
+            
+
+
 		}
-
-        /*
-
-        // Draw the teams!
-
-        float distance = sqrt( square( (teamsize/2)-x )  + square( ymid - y) );		// remeber that signs don't matter when you square!
-
-        float pulsesize =  (((loop % 2000) - 1000) / 1000.0);     // 
-
-        float normaldisance = distance /radius;    // distance normalized to range 0-1
-
-            int color = (int) (
-
-            (
-
-                (
-                    (
-                        sin( (normaldisance + (loop/200.0)) * 3.1415    )
-
-                        * 0.5 		// Now it is 0.5 to -0.5
-
-                    )
-
-                    + 0.5			// Now it is 0-1
-
-                )
-
-                *255.0					// Now it is 0-255
-            )
-
-        );
-
-            */
 
 
         sendOPCPixels();
