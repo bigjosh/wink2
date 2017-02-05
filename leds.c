@@ -61,7 +61,7 @@ struct coord coords[ BUFFER_SIZE ];
 // All are wired CCW as viewed from the front
 // 1st pixel of each panel is just to the left of center
 
-int panelOrder[PANEL_COUNT] = { 1 , 2, 0 };		// Mapp the physical order of the panels to the order they are connected to pins (and thus ledscape channels)
+int panelOrder[PANEL_COUNT] = { 2 , 1, 0 };		// Mapp the physical order of the panels to the order they are connected to pins (and thus ledscape channels)
 
 void initcoords() {
 
@@ -468,7 +468,7 @@ void game( const char *colorString ) {
     float blueteam_x = xmid;
     float redteam_x = xmid;
 
-    float teamradius = xmid*2;            // For now fille the area;
+    float teamradius = xmid*3;            // For now fill the area;
 
     float blueteam_y = 0 + teamradius + 2;                // Blue top
     float redteam_y = EXTENT_Y - 2 - teamradius;          // Red bottom
