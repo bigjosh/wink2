@@ -458,7 +458,7 @@ void game( const char *colorString ) {
 
 	srand(1);    	// Seed random numbers
 
-    make_periodic( 20000L , &info);
+    make_periodic( 22000L , &info);
 
     while (1) {
 
@@ -522,7 +522,6 @@ void game( const char *colorString ) {
         int major_line = p_int%200;
         int minor_line = p_int%20;
 
-
 		// draw the field!
 
 	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
@@ -532,32 +531,43 @@ void game( const char *colorString ) {
 
 			// Calculate how far this pixel is from the center using pythagous
 
-            float interpolate = p - p_int;
+            float interpolate = p - (float) p_int;
 
 			if ( y%200 == major_line ) {
-
+/*
                 pixelbuffer[i].r= 200.0 * interpolate;
-                pixelbuffer[i].g= 200.0 * interpolate;
+                pixelbuffer[i].g= 40+(200.0 * interpolate);
                 pixelbuffer[i].b= 200.0 * interpolate;
+*/
+                pixelbuffer[i].r= 200.0 ;
+                pixelbuffer[i].g= 40+(200.0);
+                pixelbuffer[i].b= 200.0 ;
+
 
 			} else if ( y%20 == minor_line ) {
-
+/*
                 pixelbuffer[i].r= (r1) * interpolate;
-                pixelbuffer[i].g= (g1) * interpolate;
+                pixelbuffer[i].g= 40+((g1) * interpolate);
                 pixelbuffer[i].b= (b1) * interpolate;
+*/
+                pixelbuffer[i].r= 100;
+                pixelbuffer[i].g= 100+40;
+                pixelbuffer[i].b= 100;
+            
+/*            
 
             } else if ( (y%200== (minor_line+1) ) ) {
 
                 pixelbuffer[i].r= 200* (1.0-interpolate);
-                pixelbuffer[i].g= 200* (1.0-interpolate);
+                pixelbuffer[i].g= 40+(200* (1.0-interpolate));
                 pixelbuffer[i].b= 200* (1.0-interpolate);
 
             } else if ( (y%20== (minor_line+1) ) ) {
 
                 pixelbuffer[i].r= (r1)* (1.0-interpolate);
-                pixelbuffer[i].g= (g1)* (1.0-interpolate);
+                pixelbuffer[i].g= 40+((g1)* (1.0-interpolate));
                 pixelbuffer[i].b= (b1)* (1.0-interpolate);
-
+*/
 			} else {        // grass
 
                 pixelbuffer[i].r= 0;
