@@ -439,6 +439,8 @@ void game( const char *colorString ) {
     unsigned char g1 = parsehexdigits(colorString+2);
     unsigned char b1 = parsehexdigits(colorString+4);
 
+    printf("b1=%x\r\n",b1);
+
     float xmid = EXTENT_X/2.0;
     float ymid = EXTENT_Y/2.0;
 
@@ -446,40 +448,77 @@ void game( const char *colorString ) {
 	float v=0;
 	float p=0;			// Current position;
 
+    int direction = 1;
+
     unsigned int loop=0;
 
     struct periodic_info info;
 
 	srand(time(NULL));    	// Seed random numbers
 
-    make_periodic( 100000L , &info);
+    make_periodic( 20000L , &info);
 
     while (1) {
 
-		if (v==0 && (randomFloat() > (1/15000.0) ) )  {				// On average kickoff affter 15 secs
+        //printf("v=%5.5f v_target=%5.5f p=%5.5f\r\n", v , v_target, p );
+        //sleep(1);
 
-			v_target = sqrt( randomFloat() * 25.0);							// Max velocity 5 pixels per cycle with exposential distribution
+        if (v==0) {
 
-		}
+            float kickval = randomFloat();
 
-		if (v_target>v) {		// We need to go faster
+            //printf("kv=%f\r\n", kickval);
+        
+            if ( (kickval < (1.0/100.0) ) )  {				// On average kickoff affter 15 secs
 
-			v = (v+0.01) + (v*1.01);
+                v_target = sqrt( randomFloat() );							// Max velocity 5 pixels per cycle with exposential distribution
 
-			if (v_target >= v )  v_target =0;		// We got to target so start slowing down
+                //printf("v=%5.5f v_target=%5.5f p=%5.5f kickoff\r\n", v , v_target, p );
 
-		} else {
+                if (randomFloat() < 0.25 ) {        // 25% of change sides
 
-			v_target -= 0.01;			/// Slow down linearly?
+                    direction *= -1;
+
+                }
+            } else {
+
+                //printf("v=%5.5f v_target=%5.5f p=%5.5f pause\r\n", v , v_target, p );
+
+            }
+        }
 
 
-		}
+		if (v_target > v) {		// We need to go faster
 
-		if (v < 0.01) v=0;		// Stopped? Done?
+			v = (v+0.005) + (v*1.001);
 
-		p=p+v;					// Update position
+            //printf("v=%5.5f v_target=%5.5f p=%5.5f speedup\r\n", v , v_target, p );
+			if ( v >= v_target )  { 
+                    v_target =0;		// We got to target so start slowing down
+                    //printf("v=%5.5f v_target=%5.5f p=%5.5f peak \r\n", v , v_target, p );
+            }
+
+		} else if ( v > v_target ) {
+
+			v -= 0.005;			/// Slow down linearly
+
+            //printf("v=%5.5f v_target=%5.5f p=%5.5f slowdown\r\n", v , v_target, p );
+
+
+            if (v < 0.01) {
+                
+                v=0;		// Stopped? Done?
+                //printf("v=%5.5f v_target=%5.5f p=%5.5f stopped\r\n", v , v_target, p );
+            }
+
+        }
+
+        p=p+ (v * (float) direction);					// Update position
 
 		int p_int = p;
+
+        int major_line = p_int%200;
+        int minor_line = p_int%20;
 
 
 		// draw the board!
@@ -491,22 +530,28 @@ void game( const char *colorString ) {
 
 			// Calculate how far this pixel is from the center using pythagous
 
-			if ( (p_int%200) == y%200) {
+			if ( y%200 == major_line ) {
 
                 pixelbuffer[i].r= 200;
                 pixelbuffer[i].g= 200;
                 pixelbuffer[i].b= 200;
 
-			} else if ( (p_int%20) == y%20) {
+			} else if ( y%20 == minor_line ) {
 
-                pixelbuffer[i].r= (r1)/255;
-                pixelbuffer[i].g= (g1)/255;
-                pixelbuffer[i].b= (b1)/255;
+                pixelbuffer[i].r= (r1);
+                pixelbuffer[i].g= (g1);
+                pixelbuffer[i].b= (b1);
 
-			} else {
+            } else if ( (y%20== (minor_line-1) ) || (y%20== (minor_line+1) ) ) {
+
+                pixelbuffer[i].r= (r1)/2;
+                pixelbuffer[i].g= (g1)/2;
+                pixelbuffer[i].b= (b1)/2;
+
+			} else {        // grass
 
                 pixelbuffer[i].r= 0;
-                pixelbuffer[i].g= 0;
+                pixelbuffer[i].g= 40;
                 pixelbuffer[i].b= 0;
 
 			}
