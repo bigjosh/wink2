@@ -332,7 +332,7 @@ void bullseyes( const char *colorString ) {
 
 			// Calculate how far this pixel is from the center using pythagous
 
-               float distance = sqrt( square( xmid-x )  + square( ymid - y) );		// remeber that signs don't matter when you square!
+            float distance = sqrt( square( xmid-x )  + square( ymid - y) );		// remeber that signs don't matter when you square!
 
 			float normaldisance = distance /radius;    // distance normalized to range 0-1
 
@@ -450,11 +450,13 @@ void game( const char *colorString ) {
 
     int direction = 1;
 
+    float teamsize = 10;
+
     unsigned int loop=0;
 
     struct periodic_info info;
 
-	srand(time(NULL));    	// Seed random numbers
+	srand(1);    	// Seed random numbers
 
     make_periodic( 20000L , &info);
 
@@ -521,7 +523,7 @@ void game( const char *colorString ) {
         int minor_line = p_int%20;
 
 
-		// draw the board!
+		// draw the field!
 
 	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
 
@@ -530,23 +532,31 @@ void game( const char *colorString ) {
 
 			// Calculate how far this pixel is from the center using pythagous
 
+            float interpolate = p - p_int;
+
 			if ( y%200 == major_line ) {
 
-                pixelbuffer[i].r= 200;
-                pixelbuffer[i].g= 200;
-                pixelbuffer[i].b= 200;
+                pixelbuffer[i].r= 200.0 * interpolate;
+                pixelbuffer[i].g= 200.0 * interpolate;
+                pixelbuffer[i].b= 200.0 * interpolate;
 
 			} else if ( y%20 == minor_line ) {
 
-                pixelbuffer[i].r= (r1);
-                pixelbuffer[i].g= (g1);
-                pixelbuffer[i].b= (b1);
+                pixelbuffer[i].r= (r1) * interpolate;
+                pixelbuffer[i].g= (g1) * interpolate;
+                pixelbuffer[i].b= (b1) * interpolate;
 
-            } else if ( (y%20== (minor_line-1) ) || (y%20== (minor_line+1) ) ) {
+            } else if ( (y%200== (minor_line+1) ) ) {
 
-                pixelbuffer[i].r= (r1)/2;
-                pixelbuffer[i].g= (g1)/2;
-                pixelbuffer[i].b= (b1)/2;
+                pixelbuffer[i].r= 200* (1.0-interpolate);
+                pixelbuffer[i].g= 200* (1.0-interpolate);
+                pixelbuffer[i].b= 200* (1.0-interpolate);
+
+            } else if ( (y%20== (minor_line+1) ) ) {
+
+                pixelbuffer[i].r= (r1)* (1.0-interpolate);
+                pixelbuffer[i].g= (g1)* (1.0-interpolate);
+                pixelbuffer[i].b= (b1)* (1.0-interpolate);
 
 			} else {        // grass
 
@@ -556,6 +566,40 @@ void game( const char *colorString ) {
 
 			}
 		}
+
+        /*
+
+        // Draw the teams!
+
+        float distance = sqrt( square( (teamsize/2)-x )  + square( ymid - y) );		// remeber that signs don't matter when you square!
+
+        float pulsesize =  (((loop % 2000) - 1000) / 1000.0);     // 
+
+        float normaldisance = distance /radius;    // distance normalized to range 0-1
+
+            int color = (int) (
+
+            (
+
+                (
+                    (
+                        sin( (normaldisance + (loop/200.0)) * 3.1415    )
+
+                        * 0.5 		// Now it is 0.5 to -0.5
+
+                    )
+
+                    + 0.5			// Now it is 0-1
+
+                )
+
+                *255.0					// Now it is 0-255
+            )
+
+        );
+
+            */
+
 
         sendOPCPixels();
 
