@@ -465,6 +465,9 @@ void game( const char *colorString ) {
     float blueteam_rate = (2 * PI) / 1000;
     float redteam_rate = (2 * PI) / 1200;
 
+    float redbreath_rate = (2 * PI) / 100;
+    float bluebreath_rate = (2 * PI) / 80;
+
     float blueteam_x = xmid;
     float redteam_x = xmid;
 
@@ -480,7 +483,7 @@ void game( const char *colorString ) {
 
 	srand(1);    	// Seed random numbers
 
-    make_periodic( 22000L , &info);
+    make_periodic( 30000L , &info);
 
     while (1) {
 
@@ -604,9 +607,11 @@ void game( const char *colorString ) {
             float blue_current_radius = ((sin( loop * blueteam_rate ) + 1 ) /2) * teamradius;
             float red_current_radius = ((sin( loop * redteam_rate ) + 1 ) /2) * teamradius;
 
+            int redbreath_brightness = ( ((sin(loop * redbreath_rate) +1 ) /2 ) * 100) + 130;
+            int bluebreath_brightness = ( ((sin(loop * bluebreath_rate) +1 ) /2 ) * 100) + 130;
 
             if ( pointdistance( x , y , redteam_x, redteam_y ) <= red_current_radius ) {
-                    pixelbuffer[i].r= 240;
+                    pixelbuffer[i].r= redbreath_brightness;
                     pixelbuffer[i].g= 0;
                     pixelbuffer[i].b= 0;
             }
@@ -614,7 +619,7 @@ void game( const char *colorString ) {
             if ( pointdistance( x , y , blueteam_x, blueteam_y ) <= blue_current_radius ) {
                     pixelbuffer[i].r= 0;
                     pixelbuffer[i].g= 0;
-                    pixelbuffer[i].b= 240;
+                    pixelbuffer[i].b= bluebreath_brightness;
             }
             
 
