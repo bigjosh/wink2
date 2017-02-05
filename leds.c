@@ -61,7 +61,7 @@ struct coord coords[ BUFFER_SIZE ];
 // All are wired CCW as viewed from the front
 // 1st pixel of each panel is just to the left of center
 
-int panelOrder[PANEL_COUNT] = { 2 , 1, 0 };		// Mapp the physical order of the panels to the order they are connected to pins (and thus ledscape channels)
+int panelOrder[PANEL_COUNT] = { 1, 0,2 };		// Mapp the physical order of the panels to the order they are connected to pins (and thus ledscape channels)
 
 void initcoords() {
 
