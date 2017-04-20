@@ -61,7 +61,7 @@ struct coord coords[ BUFFER_SIZE ];
 // All are wired CCW as viewed from the front
 // 1st pixel of each panel is just to the left of center
 
-int panelOrder[PANEL_COUNT] = { 1, 0,2 };		// Mapp the physical order of the panels to the order they are connected to pins (and thus ledscape channels)
+int panelOrder[PANEL_COUNT] = { 1,2,0 };		// Mapp the physical order of the panels to the order they are connected to pins (and thus ledscape channels)
 
 void initcoords() {
 
@@ -315,7 +315,7 @@ void bullseyes( const char *colorString ) {
     float xmid = EXTENT_X/2.0;
     float ymid = EXTENT_Y/2.0;
 
-    float radius = sqrt( square(xmid) + square(ymid) );
+    float radius = sqrt( square(xmid) + square(ymid) )/2;
 
     unsigned int loop=0;
 
