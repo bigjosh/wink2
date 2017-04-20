@@ -1,0 +1,13 @@
+[Unit]
+Description=Run LEDs background sender
+After=ledscape.service
+
+[Service]
+WorkingDirectory=
+ExecStart=/root/wink2/startledsd.sh
+KillMode=process
+
+
+[Install]
+WantedBy=multi-user.target
+
