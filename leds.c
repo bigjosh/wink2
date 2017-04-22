@@ -324,6 +324,68 @@ void bullseyes( const char *colorString ) {
     make_periodic( 100000L , &info);
 
     while (1) {
+	    
+	    if ( ! *colorString ) { 	// No color specified, so run a rainbow
+	     
+		    colorstep++;
+		  
+		    if (colorstep>=COLOR_STEPS) {
+		  	  colorstep=0;
+		    }
+
+		    // HSV to RGB
+		  
+		    double      hh, p, q, t, ff;
+		    long        i;
+
+		    hh =  (colorstep * 360.0 ) / COLOR_STEPS ;
+		    
+		    hh /= 60.0;
+		    
+		    i = (long)hh;
+		    
+		    ff = hh - i;
+		    p = 1.0 * (1.0 - 1.0);
+		    q = 1.0 * (1.0 - (1.0 * ff));
+		    t = 1.0 * (1.0 - (1.0 * (1.0 - ff)));
+
+		    switch(i) {
+		    case 0:
+			   r1 = 255;
+			   g1 = t * 255;
+			   b1 = p * 255;
+			   break;
+		    case 1:
+			   r1 = q * 255;
+			   g1 = 255;
+			   b1 = p * 255;
+			   break;
+		    case 2:
+			   r1 = p  * 255;
+			   g1 = 255;
+			   b1 = t * 255;
+			   break;
+
+		    case 3:
+			   r1 = p * 255;
+			   g1 = q * 255;
+			   b1 = 255;
+			   break;
+		    case 4:
+			   r1 = t * 255;
+			   g1 = p *255;
+			   b1 = 255;
+			   break;
+		    case 5:
+		    default:
+			   r1 = 255;
+			   g1 = p * 255;
+			   b1 = q *255;
+			   break;
+		    }		  
+				  		  		  
+		}	    
+	    
 
 	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
 
@@ -374,6 +436,74 @@ void bullseyes( const char *colorString ) {
     }
 
 }
+
+
+void wave() {
+
+    float xmid = EXTENT_X/2.0;
+    float ymid = EXTENT_Y/2.0;
+
+    float radius = sqrt( square(xmid) + square(ymid) )/2;
+
+    unsigned int loop=0;
+
+    struct periodic_info info;
+
+    make_periodic( 100000L , &info);
+
+    while (1) {
+
+	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
+
+			int x=coords[i].x;
+			int y=coords[i].y;
+
+			// Calculate how far this pixel is from the center using pythagous
+
+            float distance = sqrt( square( xmid-x )  + square( ymid - y) );		// remeber that signs don't matter when you square!
+
+			float normaldisance = distance /radius;    // distance normalized to range 0-1
+
+               int color = (int) (
+
+				(
+
+					(
+						(
+							sin( (normaldisance + (loop/200.0)) * 3.1415    )
+
+							* 0.5 		// Now it is 0.5 to -0.5
+
+						)
+
+						+ 0.5			// Now it is 0-1
+
+					)
+
+					*255.0					// Now it is 0-255
+				)
+
+			);
+
+
+                pixelbuffer[i].r= (color*r1)/255;
+                pixelbuffer[i].g= (color*g1)/255;
+                pixelbuffer[i].b= (color*b1)/255;
+                //SETRGB( x , y , color , color , color );
+
+        }
+
+        sendOPCPixels();
+
+        wait_period (&info);
+
+        loop++;
+
+    }
+
+}
+
+
 
 #define pdist(a, v, c, d) sqrt( ((float)a - c) * ( (float) a - c) + ( (float) v - d) * ( (float) v - d))
 
@@ -1062,7 +1192,7 @@ int main( int argc, char **argv) {
             fprintf(stderr,"Usage  : leds command arg (no space between command and arg)\r\n");
             fprintf(stderr,"Command: S=Stars\r\n");
             fprintf(stderr,"         R=Ramp\r\n");
-            fprintf(stderr,"         B=BullsEye arg=RGB color(0000FF=blue)\r\n");
+            fprintf(stderr,"         B=BullsEye arg=RGB color(0000FF=blue, none for rainbow)\r\n");
             fprintf(stderr,"         G=Game arg=RGB color(0000FF=blue)\r\n");
 
             fprintf(stderr,"         P=Plasma\r\n");
