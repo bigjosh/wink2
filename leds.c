@@ -306,11 +306,18 @@ float square(float x) {
 	return(x*x);
 }
 
+#define COLOR_STEPS 100 			// USed for color cycle mode
+
+
 void bullseyes( const char *colorString ) {
+
+    unsigned int colorstep = 0;		// For rainbow display
 
     unsigned char r1 = parsehexdigits(colorString);
     unsigned char g1 = parsehexdigits(colorString+2);
     unsigned char b1 = parsehexdigits(colorString+4);
+    
+    
 
     float xmid = EXTENT_X/2.0;
     float ymid = EXTENT_Y/2.0;
@@ -437,71 +444,6 @@ void bullseyes( const char *colorString ) {
 
 }
 
-
-void wave() {
-
-    float xmid = EXTENT_X/2.0;
-    float ymid = EXTENT_Y/2.0;
-
-    float radius = sqrt( square(xmid) + square(ymid) )/2;
-
-    unsigned int loop=0;
-
-    struct periodic_info info;
-
-    make_periodic( 100000L , &info);
-
-    while (1) {
-
-	    for(int i=0; i<BUFFER_SIZE; i++) {		// Step though the visible points
-
-			int x=coords[i].x;
-			int y=coords[i].y;
-
-			// Calculate how far this pixel is from the center using pythagous
-
-            float distance = sqrt( square( xmid-x )  + square( ymid - y) );		// remeber that signs don't matter when you square!
-
-			float normaldisance = distance /radius;    // distance normalized to range 0-1
-
-               int color = (int) (
-
-				(
-
-					(
-						(
-							sin( (normaldisance + (loop/200.0)) * 3.1415    )
-
-							* 0.5 		// Now it is 0.5 to -0.5
-
-						)
-
-						+ 0.5			// Now it is 0-1
-
-					)
-
-					*255.0					// Now it is 0-255
-				)
-
-			);
-
-
-                pixelbuffer[i].r= (color*r1)/255;
-                pixelbuffer[i].g= (color*g1)/255;
-                pixelbuffer[i].b= (color*b1)/255;
-                //SETRGB( x , y , color , color , color );
-
-        }
-
-        sendOPCPixels();
-
-        wait_period (&info);
-
-        loop++;
-
-    }
-
-}
 
 
 
